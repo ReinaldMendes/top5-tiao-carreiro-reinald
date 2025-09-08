@@ -1,22 +1,29 @@
-FROM node:20-alpine
+# === 1. Base image ===
+FROM node:20
 
-# Define o diretório de trabalho no contêiner
-WORKDIR /usr/src/app
+# === 2. Diretório de trabalho ===
+WORKDIR /app
 
-# Copia os arquivos de configuração para aproveitar o cache do Docker
+# === 3. Copiar arquivos de dependência ===
 COPY package*.json ./
 
-# Instala as dependências
-RUN npm install
+# === 4. Instalar dependências com legacy-peer-deps ===
+RUN npm install --legacy-peer-deps
 
-# Corrige vulnerabilidades de segurança após a instalação
-RUN npm audit fix --force
-
-# Copia o restante dos arquivos do projeto
+# === 5. Copiar todo o código fonte ===
 COPY . .
 
-# Expõe a porta que a aplicação irá usar
+# === 6. Limpar cache do npm (opcional, mas ajuda no build) ===
+RUN npm cache clean --force
+
+# === 7. Ajustar permissões para evitar EACCES ===
+RUN chown -R node:node /app
+
+# === 8. Build do Tailwind / React ===
+RUN npm run build
+
+# === 9. Expor porta ===
 EXPOSE 3000
 
-# Comando para iniciar a aplicação
+# === 10. Comando default para rodar a aplicação ===
 CMD ["npm", "start"]
