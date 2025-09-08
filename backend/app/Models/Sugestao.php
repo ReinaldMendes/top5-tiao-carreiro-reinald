@@ -9,11 +9,9 @@ class Sugestao extends Model
 {
     use HasFactory;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
+    // Adicione esta linha para indicar a tabela correta
+    protected $table = 'sugestoes';
+
     protected $fillable = [
         'titulo',
         'youtube_id',

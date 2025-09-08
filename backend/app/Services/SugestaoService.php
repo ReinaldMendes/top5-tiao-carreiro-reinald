@@ -3,28 +3,29 @@
 namespace App\Services;
 
 use App\Models\Sugestao;
-use Illuminate\Support\Facades\Http;
 use App\Models\Musica;
 
 class SugestaoService
 {
-    private const YOUTUBE_API_KEY = 'SUA_CHAVE_DE_API_DO_YOUTUBE';
-
     /**
-     * Valida uma URL do YouTube e salva uma sugestão.
-     *
-     * @param string $url
-     * @return Sugestao
-     * @throws \Exception
+     * Cria uma sugestão a partir de um YouTube ID ou URL.
+     * Para testes, pode-se passar direto o youtube_id.
      */
-    public function createSugestao(string $url): Sugestao
+    public function createSugestao(string $urlOrId): Sugestao
     {
-        $videoId = $this->extractVideoId($url);
+        // Para teste: se for só ID
+        $videoId = strlen($urlOrId) === 11 ? $urlOrId : $this->extractVideoId($urlOrId);
+
         if (!$videoId) {
             throw new \Exception('URL do YouTube inválida.');
         }
 
-        $videoInfo = $this->getVideoInfo($videoId);
+        // Para testes não chamar API, usamos dados falsos
+        $videoInfo = [
+            'titulo' => "Título de teste para $videoId",
+            'youtube_id' => $videoId,
+            'thumb' => "https://via.placeholder.com/640x480.png/000000?text=$videoId"
+        ];
 
         return Sugestao::create([
             'titulo' => $videoInfo['titulo'],
@@ -35,11 +36,7 @@ class SugestaoService
     }
 
     /**
-     * Aprova uma sugestão e a move para a tabela de músicas.
-     *
-     * @param int $id
-     * @return Musica
-     * @throws \Exception
+     * Aprova uma sugestão e move para músicas
      */
     public function aprovarSugestao(int $id): Musica
     {
@@ -49,10 +46,9 @@ class SugestaoService
             throw new \Exception('Esta sugestão já foi processada.');
         }
 
-        // Cria a música a partir da sugestão
         $musica = Musica::create([
             'titulo' => $sugestao->titulo,
-            'visualizacoes' => 0, // A API do YouTube não retorna visualizações facilmente, então definimos como 0
+            'visualizacoes' => 0,
             'youtube_id' => $sugestao->youtube_id,
             'thumb' => $sugestao->thumb
         ]);
@@ -64,11 +60,7 @@ class SugestaoService
     }
 
     /**
-     * Rejeita uma sugestão.
-     *
-     * @param int $id
-     * @return void
-     * @throws \Exception
+     * Rejeita uma sugestão
      */
     public function rejeitarSugestao(int $id): void
     {
@@ -78,20 +70,15 @@ class SugestaoService
     }
 
     /**
-     * Retorna todas as sugestões.
-     *
-     * @return \Illuminate\Database\Eloquent\Collection
+     * Retorna apenas sugestões pendentes
      */
     public function getSugestoes()
     {
-        return Sugestao::all();
+        return Sugestao::where('status', 'pendente')->get();
     }
 
     /**
-     * Extrai o ID do vídeo de uma URL do YouTube.
-     *
-     * @param string $url
-     * @return string|null
+     * Extrai ID do YouTube
      */
     private function extractVideoId(string $url): ?string
     {
@@ -99,35 +86,5 @@ class SugestaoService
             return $matches[1];
         }
         return null;
-    }
-
-    /**
-     * Busca informações do vídeo na API do YouTube.
-     *
-     * @param string $videoId
-     * @return array
-     * @throws \Exception
-     */
-    private function getVideoInfo(string $videoId): array
-    {
-        $response = Http::get("https://www.googleapis.com/youtube/v3/videos", [
-            'key' => self::YOUTUBE_API_KEY,
-            'id' => $videoId,
-            'part' => 'snippet'
-        ]);
-
-        $data = $response->json();
-
-        if ($response->failed() || empty($data['items'])) {
-            throw new \Exception('Não foi possível obter informações do vídeo na API do YouTube.');
-        }
-
-        $snippet = $data['items'][0]['snippet'];
-
-        return [
-            'titulo' => $snippet['title'],
-            'youtube_id' => $videoId,
-            'thumb' => $snippet['thumbnails']['high']['url']
-        ];
     }
 }

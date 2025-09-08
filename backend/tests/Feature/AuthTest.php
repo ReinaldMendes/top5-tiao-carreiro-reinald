@@ -2,10 +2,9 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
-use Tests\TestCase;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class AuthTest extends TestCase
 {
@@ -22,7 +21,7 @@ class AuthTest extends TestCase
         ]);
 
         $response->assertStatus(200)
-                 ->assertJsonStructure(['token']);
+            ->assertJsonStructure(['token']);
     }
 
     /** @test */
@@ -36,6 +35,6 @@ class AuthTest extends TestCase
         ]);
 
         $response->assertStatus(401)
-                 ->assertJson(['message' => 'Credenciais inválidas.']);
+            ->assertJson(['message' => 'Credenciais inválidas.']);
     }
 }
