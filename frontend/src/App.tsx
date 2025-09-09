@@ -1,12 +1,33 @@
 import React from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
+import Sugestoes from "./pages/Sugestoes";
+import PrivateRoute from "./components/PrivateRoute";
 
 function App() {
   return (
-    <div className="flex justify-center items-center h-screen">
-      <h1 className="text-4xl font-bold text-green-600">
-        Olá, Reinald! React + TypeScript + Tailwind funcionando! 🚀
-      </h1>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route
+          path="/dashboard"
+          element={
+            <PrivateRoute>
+              <Dashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/sugestoes"
+          element={
+            <PrivateRoute>
+              <Sugestoes />
+            </PrivateRoute>
+          }
+        />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
